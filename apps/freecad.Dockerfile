@@ -1,4 +1,4 @@
-FROM thomasloven/novnc-base
+FROM thomasloven/novnc-ubuntu
 
 RUN sudo apt-get update \
   && DEBIAN_FRONTEND=noninteractive \

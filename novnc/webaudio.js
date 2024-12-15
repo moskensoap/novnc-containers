@@ -134,6 +134,7 @@ const wa = new WebAudio(null);
 
 // Audio playback requires user interaction before being allowed by browsers
 const connect = () => {
+  if (MediaSource === undefined) return;
   if (!wa.connected)
     wa.start();
 };

@@ -1,12 +1,12 @@
-FROM thomasloven/novnc-base
+FROM thomasloven/novnc-ubuntu
 
-ARG APPIMAGE=PrusaSlicer-2.8.1+linux-x64-older-distros-GTK3-202409181354.AppImage
+ARG APPIMAGE=PrusaSlicer-2.8.1+linux-x64-newer-distros-GTK3-202409181416.AppImage
 ARG URL=https://github.com/prusa3d/PrusaSlicer/releases/download/version_2.8.1/${APPIMAGE}
 
 RUN sudo apt-get update \
   && DEBIAN_FRONTEND=noninteractive \
   sudo apt-get install -y \
-    libgtk-3-dev libglu1-mesa libwebkit2gtk-4.0-37 \
+    libgtk-3-dev libglu1-mesa libwebkit2gtk-4.1-0 \
     locales curl \
   && sudo locale-gen en \
   && curl -sSL ${URL} > ${APPIMAGE} \

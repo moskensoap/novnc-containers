@@ -4,8 +4,14 @@ A desktop environment with sound in docker
 
 Can be used as a base file for application specific containers.
 
+To just get a desktop environment at `http://localhost:8080`:
 
-E.g:
+```bash
+docker run --rm thomasloven/novnc-base -p 8080:8080
+```
+
+Or used as a base for specific applications:
+
 ```dockerfile
 FROM thomasloven/novnc-base
 
@@ -15,6 +21,8 @@ RUN sudo apt-get update \
 
 CMD ["blender"]
 ```
+
+See more examples in `apps/`.
 
 ### Bonus functionality - dotfiles installation.
 If the environment variable `DOTFILES_REPO` is set, the container will `git

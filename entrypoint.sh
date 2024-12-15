@@ -1,5 +1,6 @@
 #! /bin/bash
 
+
 shopt -s nullglob
 
 kill_pid() {
@@ -16,6 +17,7 @@ kill_pid ~/.pa-pid
 kill_pid ~/.tcp-pid
 kill_pid ~/.ws-pid
 
+
 # Clone and install dotfiles if DOTFILES_REPO is defined
 if [ -n "$DOTFILES_REPO" ]; then
   if [ ! -d ~/dotfiles ]; then
@@ -28,6 +30,7 @@ fi
 
 # Launch VNC server - view :1 defaults to port 5901
 vncserver :1 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE &
+# vncserver :1 &
 echo "$!" > ~/.vnc-pid
 
 # Launch pulseaudio server
