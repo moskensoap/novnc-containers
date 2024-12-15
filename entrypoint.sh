@@ -18,43 +18,63 @@ kill_pid ~/.tcp-pid
 kill_pid ~/.ws-pid
 
 
-# Clone and install dotfiles if DOTFILES_REPO is defined
-if [ -n "$DOTFILES_REPO" ]; then
-  if [ ! -d ~/dotfiles ]; then
-    git clone $DOTFILES_REPO ~/dotfiles
-    if [ -f ~/dotfiles/install.sh ]; then
-      /bin/bash ~/dotfiles/install.sh
+user_entrypoint() {
+  cd ~
+
+  # Clone and install dotfiles if DOTFILES_REPO is defined
+  if [ -n "$DOTFILES_REPO" ]; then
+    if [ ! -d ~/dotfiles ]; then
+      git clone --depth 1 --recurse-submodules --shallow-submodules $DOTFILES_REPO ~/dotfiles
+      if [ -f ~/dotfiles/install.sh ]; then
+        /bin/bash ~/dotfiles/install.sh
+      fi
     fi
   fi
+
+  # Launch VNC server - view :1 defaults to port 5901
+  vncserver :1 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE &
+  # vncserver :1 &
+  echo "$!" > ~/.vnc-pid
+
+  # Launch pulseaudio server
+  # /etc/pulse/client.conf and /etc/pulse/default.pa are setup to make a default
+  # audio sink which outputs to a socket at /tmp/pulseaudio.socket
+  DISPLAY=:0.0 pulseaudio --disallow-module-loading --disallow-exit --exit-idle-time=-1&
+  echo "$!" > ~/.pa-pid
+
+  # Use gstreamer to stream the pulseaudio source /tmp/pulseaudio.socket to stdout (fd=1)
+  # the tcpserver from ucspi-tcp pipes this to tcp port 6901
+  tcpserver localhost 6901 gst-launch-1.0 -q pulsesrc server=/tmp/pulseaudio.socket ! audio/x-raw, channels=2, rate=12000 ! cutter ! opusenc ! webmmux ! fdsink fd=1 &
+  echo "$!" > ~/.tcp-pid
+
+  # Websockify does three things:
+  # - publishes /opt/noVNC to http port 8080
+  # - proxies vnc port 5901 to 8080/websockify?token=vnc
+  # - proxies pulseaudio port 6901 to 8080/websockify?token=pulse
+  # The latter two are defined through the tokenfile
+  /opt/noVNC/utils/websockify/websockify.py --web /opt/noVNC 8080 --token-plugin=TokenFile --token-source=/opt/noVNC/tokenfile &
+  echo "$!" > ~/.ws-pid
+
+  if [ -n "$@" ]; then
+    DISPLAY=:1.0 exec "$@" &
+  fi
+
+  wait
+}
+
+uname=${USERNAME:-novnc}
+uid=${UUID:-1000}
+gid=${GUID:-1000}
+
+if ! id -u ${uname} > /dev/null 2>&1; then
+  addgroup --gid ${gid} ${uname}
+  adduser --home /home/${uname} --shell /bin/bash --system --disabled-password --uid ${uid} --ingroup ${uname} ${uname}
+  echo "${uname} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+  mkdir -p /home/${uname}
+  chown ${uname}:${uname} /home/${uname}
 fi
 
-# Launch VNC server - view :1 defaults to port 5901
-vncserver :1 -SecurityTypes None -localhost no --I-KNOW-THIS-IS-INSECURE &
-# vncserver :1 &
-echo "$!" > ~/.vnc-pid
-
-# Launch pulseaudio server
-# /etc/pulse/client.conf and /etc/pulse/default.pa are setup to make a default
-# audio sink which outputs to a socket at /tmp/pulseaudio.socket
-DISPLAY=:0.0 pulseaudio --disallow-module-loading --disallow-exit --exit-idle-time=-1&
-echo "$!" > ~/.pa-pid
-
-# Use gstreamer to stream the pulseaudio source /tmp/pulseaudio.socket to stdout (fd=1)
-# the tcpserver from ucspi-tcp pipes this to tcp port 6901
-tcpserver localhost 6901 gst-launch-1.0 -q pulsesrc server=/tmp/pulseaudio.socket ! audio/x-raw, channels=2, rate=12000 ! cutter ! opusenc ! webmmux ! fdsink fd=1 &
-echo "$!" > ~/.tcp-pid
-
-# Websockify does three things:
-# - publishes /opt/noVNC to http port 8080
-# - proxies vnc port 5901 to 8080/websockify?token=vnc
-# - proxies pulseaudio port 6901 to 8080/websockify?token=pulse
-# The latter two are defined through the tokenfile
-/opt/noVNC/utils/websockify/websockify.py --web /opt/noVNC 8080 --token-plugin=TokenFile --token-source=/opt/noVNC/tokenfile &
-echo "$!" > ~/.ws-pid
-
-if [ -n "$@" ]; then
-  DISPLAY=:1.0 exec "$@" &
-fi
+export -f user_entrypoint
+su ${uname} -c "bash -c user_entrypoint ${@}" &
 
 wait
-

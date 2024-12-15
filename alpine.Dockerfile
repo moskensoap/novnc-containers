@@ -50,17 +50,12 @@ COPY entrypoint.sh /opt/noVNC/entrypoint.sh
 ENTRYPOINT ["/opt/noVNC/entrypoint.sh"]
 EXPOSE 8080
 
-RUN adduser --home /home/novnc --shell /bin/bash --system --disabled-password novnc \
-    && echo "novnc ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-
 # Add a custom version of vncserver which discards all arguments but the display
 RUN mv /usr/bin/vncserver /usr/bin/vncserver-orig \
   && echo -e "#!/bin/bash \n \
   /usr/bin/vncserver-orig \$1" > /usr/bin/vncserver \
   && chmod +x /usr/bin/vncserver
 
-USER novnc
-RUN mkdir -p /home/novnc/.vnc/ \
-    && echo -e "-Securitytypes=none" > /home/novnc/.vnc/config \
-    && touch /home/novnc/.vnc/passwd && chmod 0600 /home/novnc/.vnc/passwd
-WORKDIR /home/novnc
+RUN mkdir -p /etc/skel/.vnc/ \
+  && echo -e "-Securitytypes=none" > /etc/skel/.vnc/config \
+  && touch /etc/skel/.vnc/passwd && chmod 0600 /etc/skel/.vnc/passwd

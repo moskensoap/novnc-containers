@@ -57,8 +57,3 @@ COPY entrypoint.sh /opt/noVNC/entrypoint.sh
 
 ENTRYPOINT ["/opt/noVNC/entrypoint.sh"]
 EXPOSE 8080
-
-RUN adduser --home /home/novnc --shell /bin/bash --system --disabled-password novnc \
-    && echo "novnc ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-USER novnc
-WORKDIR /home/novnc
