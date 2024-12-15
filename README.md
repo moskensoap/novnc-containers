@@ -5,7 +5,7 @@ A desktop environment with sound in docker.
 Can be used as a base file for application specific containers.
 
 - `thomasloven/novnc-ubuntu`
-- `thomasloven/novnc-debuan`
+- `thomasloven/novnc-debian`
 - `thomasloven/novnc-alpine`
 
 To just get a desktop environment at `http://localhost:8080`:
