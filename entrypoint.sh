@@ -52,7 +52,7 @@ user_entrypoint() {
   # - proxies vnc port 5901 to 8080/websockify?token=vnc
   # - proxies pulseaudio port 6901 to 8080/websockify?token=pulse
   # The latter two are defined through the tokenfile
-  /opt/noVNC/utils/websockify/websockify.py --web /opt/noVNC 8080 --token-plugin=TokenFile --token-source=/opt/noVNC/tokenfile &
+  /opt/noVNC/utils/websockify/run --web /opt/noVNC 8080 --token-plugin=TokenFile --token-source=/opt/noVNC/tokenfile &
   echo "$!" > ~/.ws-pid
 
   if [ -n "$@" ]; then
